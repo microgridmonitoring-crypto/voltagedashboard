@@ -3,31 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEXUS // Volt Monitor (Light Mode)</title>
+    <title>NEXUS // Volt Monitor</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --bg-color: #f1f5f9;
-            --panel-bg: rgba(255, 255, 255, 0.85);
-            --border-color: rgba(99, 102, 241, 0.15);
-            --primary-accent: #6366f1; /* Vibrant Indigo */
-            --secondary-accent: #06b6d4; /* Neon Cyan */
-            --text-main: #0f172a;
+            --bg-color: #0a0b10;
+            --panel-bg: rgba(20, 21, 33, 0.7);
+            --border-color: rgba(0, 242, 254, 0.15);
+            --cyan-glow: #00f2fe;
+            --blue-accent: #4facfe;
+            --text-main: #f8fafc;
             --text-muted: #64748b;
-            --warn-color: #ef4444; /* Vivid Red */
-            --safe-color: #10b981; /* Emerald Green */
+            --warn-color: #ff9f43;
+            --safe-color: #00e676;
         }
 
         body {
             font-family: 'Space Grotesk', sans-serif;
             background-color: var(--bg-color);
             background-image: 
-                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.08) 0px, transparent 40%),
-                radial-gradient(at 100% 100%, rgba(6, 118, 212, 0.06) 0px, transparent 40%);
+                radial-gradient(at 0% 0%, rgba(79, 172, 254, 0.08) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(0, 242, 254, 0.05) 0px, transparent 50%);
             color: var(--text-main);
             min-height: 100vh;
             margin: 0;
@@ -40,13 +40,14 @@
 
         .header-title {
             font-family: 'Orbitron', sans-serif;
-            font-weight: 800;
+            font-weight: 700;
             letter-spacing: 4px;
             font-size: 1.8rem;
             margin-bottom: 30px;
-            background: linear-gradient(135deg, var(--primary-accent), var(--secondary-accent));
+            background: linear-gradient(135deg, var(--cyan-glow), var(--blue-accent));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(0, 242, 254, 0.3);
         }
 
         .main-grid {
@@ -57,7 +58,6 @@
             max-width: 750px;
         }
 
-        /* Glassmorphism Light Card Style */
         .card {
             background: var(--panel-bg);
             backdrop-filter: blur(12px);
@@ -65,7 +65,7 @@
             border: 1px solid var(--border-color);
             border-radius: 20px;
             padding: 30px;
-            box-shadow: 0 15px 35px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
             position: relative;
             overflow: hidden;
         }
@@ -76,8 +76,8 @@
             top: 0;
             left: 0;
             width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, var(--primary-accent), var(--secondary-accent));
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--cyan-glow), transparent);
         }
 
         .card-header-flex {
@@ -93,33 +93,28 @@
             color: var(--text-muted);
             letter-spacing: 2px;
             text-transform: uppercase;
+            margin: 0;
         }
 
-        /* Export Button Layout */
         .btn-export {
             font-family: 'Space Grotesk', sans-serif;
             font-weight: 700;
-            background: linear-gradient(135deg, var(--primary-accent), var(--secondary-accent));
-            color: #ffffff;
+            background: linear-gradient(135deg, var(--cyan-glow), var(--blue-accent));
+            color: #0a0b10;
             border: none;
-            padding: 8px 18px;
-            border-radius: 8px;
+            padding: 6px 16px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 0.85rem;
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+            font-size: 0.8rem;
+            box-shadow: 0 4px 12px rgba(0, 242, 254, 0.25);
             transition: all 0.2s ease;
         }
 
         .btn-export:hover {
             transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+            box-shadow: 0 6px 16px rgba(0, 242, 254, 0.4);
         }
 
-        .btn-export:active {
-            transform: translateY(1px);
-        }
-
-        /* Voltage UI Layout */
         .telemetry-row {
             display: flex;
             justify-content: space-between;
@@ -137,27 +132,27 @@
             font-family: 'Orbitron', sans-serif;
             font-size: 5rem;
             font-weight: 900;
-            color: var(--primary-accent);
+            color: var(--cyan-glow);
             line-height: 1;
+            text-shadow: 0 0 30px rgba(0, 242, 254, 0.4);
             transition: color 0.5s ease;
         }
 
         .unit {
             font-size: 2.2rem;
-            font-weight: 700;
+            font-weight: 500;
             margin-left: 10px;
             color: var(--text-muted);
         }
 
-        /* Metric Parameters Box */
         .status-box {
             display: flex;
             flex-direction: column;
             gap: 12px;
-            background: rgba(15, 23, 42, 0.04);
+            background: rgba(0, 0, 0, 0.2);
             padding: 15px 20px;
             border-radius: 12px;
-            border: 1px solid rgba(0, 0, 0, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.02);
             min-width: 160px;
         }
 
@@ -169,11 +164,11 @@
         }
 
         .meta-label { color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px;}
-        .meta-value { font-weight: 700; }
+        .meta-value { font-weight: 500; }
 
         .pulse-dot {
-            height: 9px;
-            width: 9px;
+            height: 8px;
+            width: 8px;
             background-color: var(--safe-color);
             border-radius: 50%;
             display: inline-block;
@@ -182,7 +177,7 @@
         }
 
         @keyframes pulse {
-            0% { transform: scale(0.9); opacity: 0.5; }
+            0% { transform: scale(0.9); opacity: 0.4; }
             100% { transform: scale(1.2); opacity: 1; }
         }
 
@@ -194,11 +189,11 @@
 </head>
 <body>
 
-    <div class="header-title">NEXUS // CORE CONTROL</div>
+    <div class="header-title">NEXUS // TELEMETRY</div>
 
     <div class="main-grid">
         <div class="card">
-            <div class="card-label">Realtime Input Voltage</div>
+            <div class="card-label" style="margin-bottom: 15px;">Realtime Input Voltage</div>
             <div class="telemetry-row">
                 <div class="voltage-container">
                     <span id="voltage-val">0.00</span><span class="unit">V</span>
@@ -211,10 +206,10 @@
                     </div>
                     <div class="meta-item">
                         <span class="meta-label">Gateway</span>
-                        <span class="meta-value" id="gateway-status" style="color: var(--text-muted)">Syncing...</span>
+                        <span class="meta-value" id="gateway-status">Syncing...</span>
                     </div>
                     <div class="meta-item">
-                        <span class="meta-label">Data Link</span>
+                        <span class="meta-label">Stream</span>
                         <span class="pulse-dot" id="status-indicator"></span>
                     </div>
                 </div>
@@ -223,7 +218,7 @@
 
         <div class="card">
             <div class="card-header-flex">
-                <div class="card-label">Voltage History Pipeline</div>
+                <div class="card-label">Voltage History (20 Samples)</div>
                 <button class="btn-export" id="export-btn">Export to CSV</button>
             </div>
             <div class="chart-wrapper">
@@ -249,33 +244,32 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Global cache array container for compiled historical data points export
+        // Global data collection cache array for CSV export routine
         let historicalBackupBuffer = [];
 
-        // --- Colorful Chart Setup ---
+        // --- Chart Canvas Init ---
         const ctx = document.getElementById('voltageChart').getContext('2d');
         const voltageChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: [],
                 datasets: [{
-                    label: 'Calculated Potential (V)',
+                    label: 'Voltage Line',
                     data: [],
-                    borderColor: '#6366f1',
+                    borderColor: '#00f2fe',
                     borderWidth: 3,
-                    pointBackgroundColor: '#06b6d4',
-                    pointBorderColor: '#6366f1',
+                    pointBackgroundColor: '#4facfe',
+                    pointBorderColor: '#00f2fe',
                     pointRadius: 4,
                     tension: 0.35,
                     fill: true,
-                    // Bright vibrant gradient fill for light mode styling
                     backgroundColor: function(context) {
                         const chart = context.chart;
                         const {ctx, chartArea} = chart;
                         if (!chartArea) return null;
                         const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-                        gradient.addColorStop(0, 'rgba(99, 102, 241, 0.2)');
-                        gradient.addColorStop(1, 'rgba(6, 182, 212, 0.01)');
+                        gradient.addColorStop(0, 'rgba(0, 242, 254, 0.25)');
+                        gradient.addColorStop(1, 'rgba(0, 242, 254, 0.0)');
                         return gradient;
                     }
                 }]
@@ -286,20 +280,20 @@
                 plugins: { legend: { display: false } },
                 scales: {
                     x: {
-                        grid: { color: 'rgba(0, 0, 0, 0.04)', drawTicks: false },
+                        grid: { color: 'rgba(255, 255, 255, 0.03)', drawTicks: false },
                         ticks: { color: '#64748b', font: { family: 'Space Grotesk' } }
                     },
                     y: {
                         min: 0,
-                        max: 20,
-                        grid: { color: 'rgba(0, 0, 0, 0.04)', drawTicks: false },
+                        max: 20, 
+                        grid: { color: 'rgba(255, 255, 255, 0.03)', drawTicks: false },
                         ticks: { color: '#64748b', font: { family: 'Space Grotesk' } }
                     }
                 }
             }
         });
 
-        // --- Realtime Streams Logic Link ---
+        // --- Realtime Display Logic ---
         const currentRef = ref(db, 'voltage_system/current_voltage');
         const displayTarget = document.getElementById('voltage-val');
         const gatewayStatus = document.getElementById('gateway-status');
@@ -312,64 +306,70 @@
                 gatewayStatus.innerText = "ONLINE";
                 gatewayStatus.style.color = "var(--safe-color)";
                 statusIndicator.style.backgroundColor = "var(--safe-color)";
-                statusIndicator.style.boxShadow = "0 0 10px var(--safe-color)";
 
-                // Dynamic Alarm Alert limits colors logic transformation 
                 if (volts < 11.0) {
                     displayTarget.style.color = "var(--warn-color)";
+                    displayTarget.style.textShadow = "0 0 30px rgba(255, 159, 67, 0.4)";
                 } else {
-                    displayTarget.style.color = "var(--primary-accent)";
+                    displayTarget.style.color = "var(--cyan-glow)";
+                    displayTarget.style.textShadow = "0 0 30px rgba(0, 242, 254, 0.4)";
                 }
             }
         });
 
-        // --- Historical Buffer Logging Engine & Chart Updates ---
+        // --- Historical Node Subscriptions & Timestamp Parser ---
         const historyRef = query(ref(db, 'voltage_system/history'), limitToLast(20));
         onValue(historyRef, (snapshot) => {
             const timeLabels = [];
             const dataPoints = [];
-            historicalBackupBuffer = []; // Reset local memory buffer cache
+            historicalBackupBuffer = []; // Clear array for incoming fresh set
 
-            snapshot.forEach((childSnapshot) => {
-                const record = childSnapshot.val();
-                dataPoints.push(record.voltage);
-                
-                const formatTime = new Date(record.timestamp);
-                const timeString = formatTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                timeLabels.push(timeString);
+            if (snapshot.exists()) {
+                snapshot.forEach((childSnapshot) => {
+                    const record = childSnapshot.val();
+                    dataPoints.push(record.voltage);
+                    
+                    // Safe conversion wrapper fallback for different timestamp styles
+                    let formatTime;
+                    if (record.timestamp) {
+                        formatTime = new Date(record.timestamp);
+                    } else {
+                        formatTime = new Date(); // Fallback if record structure mismatch
+                    }
 
-                // Populate global array data fields ready for automated sheet conversion compilation 
-                historicalBackupBuffer.push({
-                    Timestamp: formatTime.toISOString(),
-                    Voltage: record.voltage
+                    // Build readable clock labels
+                    const timeString = isNaN(formatTime.getTime()) ? "??:??" : formatTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    timeLabels.push(timeString);
+
+                    // Push objects directly into our exportable array
+                    historicalBackupBuffer.push({
+                        Timestamp: isNaN(formatTime.getTime()) ? new Date().toISOString() : formatTime.toISOString(),
+                        Voltage: record.voltage
+                    });
                 });
-            });
 
-            voltageChart.data.labels = timeLabels;
-            voltageChart.data.datasets[0].data = dataPoints;
-            voltageChart.update();
+                voltageChart.data.labels = timeLabels;
+                voltageChart.data.datasets[0].data = dataPoints;
+                voltageChart.update();
+            }
         });
 
-        // --- CSV Engine Downloader Hook ---
+        // --- CSV Generation Engine ---
         document.getElementById('export-btn').addEventListener('click', () => {
             if (historicalBackupBuffer.length === 0) {
-                alert("No telemetry data found in buffer matrix yet.");
+                alert("No telemetry data found in buffer matrix yet. Ensure your ESP32-S3 is logging to /voltage_system/history");
                 return;
             }
 
-            // Design string header alignments
             let csvContent = "data:text/csv;charset=utf-8,Timestamp,Voltage_V\n";
-            
-            // Loop data maps elements out into columns line splits
             historicalBackupBuffer.forEach((row) => {
                 csvContent += `${row.Timestamp},${row.Voltage}\n`;
             });
 
-            // Trigger silent asset mapping pointer reference anchor down-stream download execution
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `Volt_Data_Export_${new Date().toISOString().slice(0,10)}.csv`);
+            link.setAttribute("download", `Volt_Data_${new Date().toISOString().slice(0,10)}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
