@@ -3,69 +3,202 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ESP32-S3 Advanced Telemetry Dashboard</title>
+    <title>NEXUS // Volt Monitor</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    
     <style>
+        :root {
+            --bg-color: #0a0b10;
+            --panel-bg: rgba(20, 21, 33, 0.7);
+            --border-color: rgba(0, 242, 254, 0.15);
+            --cyan-glow: #00f2fe;
+            --blue-accent: #4facfe;
+            --text-main: #f8fafc;
+            --text-muted: #64748b;
+            --warn-color: #ff9f43;
+            --safe-color: #00e676;
+        }
+
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background-color: #0f0f12;
-            color: #ffffff;
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(79, 172, 254, 0.08) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(0, 242, 254, 0.05) 0px, transparent 50%);
+            color: var(--text-main);
+            min-height: 100vh;
+            margin: 0;
+            padding: 40px 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-        }
-        .dashboard-container {
-            background-color: #16161a;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 12px 40px rgba(0,0,0,0.6);
-            text-align: center;
-            width: 100%;
-            max-width: 600px;
-            border: 1px solid #24242b;
-            margin-bottom: 20px;
-        }
-        h1 {
-            font-size: 1.2rem;
-            color: #94a3b8;
-            margin-bottom: 20px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-        .voltage-frame {
-            font-size: 4rem;
-            font-weight: 700;
-            color: #10b981;
-            margin-bottom: 10px;
-        }
-        .unit-symbol { font-size: 1.8rem; color: inherit; }
-        .chart-container {
-            background-color: #16161a;
-            padding: 20px;
-            border-radius: 20px;
-            box-shadow: 0 12px 40px rgba(0,0,0,0.6);
-            width: 100%;
-            max-width: 600px;
-            border: 1px solid #24242b;
             box-sizing: border-box;
+        }
+
+        .header-title {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            letter-spacing: 4px;
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, var(--cyan-glow), var(--blue-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(0, 242, 254, 0.3);
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+            width: 100%;
+            max-width: 750px;
+        }
+
+        /* Glassmorphism Card Style */
+        .card {
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--cyan-glow), transparent);
+        }
+
+        .card-label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        /* Main Voltage Display Area */
+        .telemetry-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .voltage-container {
+            display: flex;
+            align-items: baseline;
+        }
+
+        .voltage-display {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 5rem;
+            font-weight: 900;
+            color: var(--cyan-glow);
+            line-height: 1;
+            text-shadow: 0 0 30px rgba(0, 242, 254, 0.4);
+            transition: color 0.5s ease;
+        }
+
+        .unit {
+            font-size: 2.2rem;
+            font-weight: 500;
+            margin-left: 10px;
+            color: var(--text-muted);
+        }
+
+        /* Dynamic Sidebar Status Box */
+        .status-box {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.02);
+            min-width: 160px;
+        }
+
+        .meta-item {
+            font-size: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .meta-label { color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px;}
+        .meta-value { font-weight: 500; }
+
+        .pulse-dot {
+            height: 8px;
+            width: 8px;
+            background-color: var(--safe-color);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px var(--safe-color);
+            animation: pulse 2s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.9); opacity: 0.4; }
+            100% { transform: scale(1.2); opacity: 1; }
+        }
+
+        .chart-wrapper {
+            width: 100%;
+            height: 280px;
         }
     </style>
 </head>
 <body>
 
-    <div class="dashboard-container">
-        <h1>Live Voltage Node</h1>
-        <div class="voltage-frame">
-            <span id="voltage-val">0.00</span><span class="unit-symbol">V</span>
-        </div>
-    </div>
+    <div class="header-title">NEXUS // TELEMETRY</div>
 
-    <div class="chart-container">
-        <canvas id="voltageChart"></canvas>
+    <div class="main-grid">
+        <div class="card">
+            <div class="card-label">Realtime Input Voltage</div>
+            <div class="telemetry-row">
+                <div class="voltage-container">
+                    <span id="voltage-val">0.00</span><span class="unit">V</span>
+                </div>
+                
+                <div class="status-box">
+                    <div class="meta-item">
+                        <span class="meta-label">System</span>
+                        <span class="meta-value" style="color: var(--safe-color)">Active</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Gateway</span>
+                        <span class="meta-value" id="gateway-status">Syncing...</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Stream</span>
+                        <span class="pulse-dot" id="status-indicator"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-label">Voltage History (20 Samples)</div>
+            <div class="chart-wrapper">
+                <canvas id="voltageChart"></canvas>
+            </div>
+        </div>
     </div>
 
     <script type="module">
@@ -85,60 +218,101 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // --- Chart Setup ---
+        // --- Chart Configuration Setup ---
         const ctx = document.getElementById('voltageChart').getContext('2d');
         const voltageChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: [], // Timestamps populated dynamically
+                labels: [],
                 datasets: [{
-                    label: 'Voltage Timeline',
+                    label: 'Voltage Line',
                     data: [],
-                    borderColor: '#10b981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    borderWidth: 2,
-                    tension: 0.3,
-                    fill: true
+                    borderColor: '#00f2fe',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#4facfe',
+                    pointBorderColor: '#00f2fe',
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.35,
+                    fill: true,
+                    // Gradient Area Fill Logic
+                    backgroundColor: function(context) {
+                        const chart = context.chart;
+                        const {ctx, chartArea} = chart;
+                        if (!chartArea) return null;
+                        const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                        gradient.addColorStop(0, 'rgba(0, 242, 254, 0.25)');
+                        gradient.addColorStop(1, 'rgba(0, 242, 254, 0.0)');
+                        return gradient;
+                    }
                 }]
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
                 scales: {
-                    x: { grid: { color: '#24242b' }, ticks: { color: '#94a3b8' } },
-                    y: { min: 0, max: 25, grid: { color: '#24242b' }, ticks: { color: '#94a3b8' } }
+                    x: {
+                        grid: { color: 'rgba(255, 255, 255, 0.03)', drawTicks: false },
+                        ticks: { color: '#64748b', font: { family: 'Space Grotesk' } }
+                    },
+                    y: {
+                        min: 0,
+                        max: 20, // Adjusted max limit for beautiful scaling under 16.5V inputs
+                        grid: { color: 'rgba(255, 255, 255, 0.03)', drawTicks: false },
+                        ticks: { color: '#64748b', font: { family: 'Space Grotesk' } }
+                    }
                 }
             }
         });
 
-        // --- Realtime Counter Component ---
+        // --- Data Binding Elements ---
         const currentRef = ref(db, 'voltage_system/current_voltage');
         const displayTarget = document.getElementById('voltage-val');
+        const gatewayStatus = document.getElementById('gateway-status');
+        const statusIndicator = document.getElementById('status-indicator');
+
+        // Capture Immediate Realtime Stream
         onValue(currentRef, (snapshot) => {
             if(snapshot.exists()) {
-                displayTarget.innerText = Number(snapshot.val()).toFixed(2);
+                const volts = Number(snapshot.val());
+                displayTarget.innerText = volts.toFixed(2);
+                gatewayStatus.innerText = "ONLINE";
+                gatewayStatus.style.color = "var(--safe-color)";
+                statusIndicator.style.backgroundColor = "var(--safe-color)";
+                statusIndicator.style.boxShadow = "0 0 10px var(--safe-color)";
+
+                // Dynamic UI color transformation based on low voltage warning limits
+                if (volts < 11.0) {
+                    displayTarget.style.color = "var(--warn-color)";
+                    displayTarget.style.textShadow = "0 0 30px rgba(255, 159, 67, 0.4)";
+                } else {
+                    displayTarget.style.color = "var(--cyan-glow)";
+                    displayTarget.style.textShadow = "0 0 30px rgba(0, 242, 254, 0.4)";
+                }
             }
+        }, () => {
+            gatewayStatus.innerText = "ERROR";
+            gatewayStatus.style.color = "#ff4d4d";
+            statusIndicator.style.backgroundColor = "#ff4d4d";
         });
 
-        // --- Historical Graph Pipeline ---
-        // Query limits view window viewport to the latest 20 telemetry array objects
+        // Capture Historical Pipeline Array
         const historyRef = query(ref(db, 'voltage_system/history'), limitToLast(20));
         onValue(historyRef, (snapshot) => {
-            const labelsArray = [];
-            const dataArray = [];
+            const timeLabels = [];
+            const dataPoints = [];
             
             snapshot.forEach((childSnapshot) => {
-                const childData = childSnapshot.val();
-                dataArray.push(childData.voltage);
+                const record = childSnapshot.val();
+                dataPoints.push(record.voltage);
                 
-                // Formulate legible time layout strings from milliseconds
-                const date = new Date(childData.timestamp);
-                const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                labelsArray.push(timeString);
+                const formatTime = new Date(record.timestamp);
+                timeLabels.push(formatTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
             });
 
-            // Re-render chart dataset fields
-            voltageChart.data.labels = labelsArray;
-            voltageChart.data.datasets[0].data = dataArray;
+            voltageChart.data.labels = timeLabels;
+            voltageChart.data.datasets[0].data = dataPoints;
             voltageChart.update();
         });
     </script>
