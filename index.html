@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ESP32-S3 Realtime Voltage Dashboard</title>
+    <title>ESP32-S3 Voltage Control Console</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #121212;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #0f0f12;
             color: #ffffff;
             display: flex;
             justify-content: center;
@@ -15,115 +15,121 @@
             height: 100vh;
             margin: 0;
         }
-        .dashboard-card {
-            background-color: #1e1e1e;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        .dashboard-container {
+            background-color: #16161a;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.6);
             text-align: center;
-            width: 320px;
-            border: 1px solid #333;
+            width: 340px;
+            border: 1px solid #24242b;
         }
         h1 {
-            font-size: 1.5rem;
-            color: #b3b3b3;
-            margin-bottom: 20px;
+            font-size: 1.2rem;
+            color: #94a3b8;
+            margin-bottom: 25px;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
         }
-        .voltage-display {
-            font-size: 4rem;
-            font-weight: bold;
-            color: #00e676;
-            margin: 10px 0;
-            transition: color 0.5s ease;
+        .voltage-frame {
+            font-size: 4.5rem;
+            font-weight: 700;
+            color: #10b981;
+            margin: 15px 0;
+            transition: color 0.4s ease-in-out;
         }
-        .unit {
-            font-size: 2rem;
-            color: #00e676;
+        .unit-symbol {
+            font-size: 2.2rem;
+            color: inherit;
+            margin-left: 5px;
         }
-        .status {
-            font-size: 0.9rem;
-            color: #888;
-            margin-top: 20px;
+        .status-footer {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-top: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .status-dot {
-            height: 10px;
-            width: 10px;
-            background-color: #00e676;
+        .status-indicator-pulse {
+            height: 9px;
+            width: 9px;
+            background-color: #10b981;
             border-radius: 50%;
-            display: inline-block;
-            margin-right: 8px;
-            animation: blink 2s infinite;
+            margin-right: 10px;
+            animation: pulse-glow 2s infinite alternate;
         }
-        @keyframes blink {
-            0% { opacity: 0.4; }
-            50% { opacity: 1; }
-            100% { opacity: 0.4; }
+        @keyframes pulse-glow {
+            0% { transform: scale(0.9); opacity: 0.4; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+            100% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 8px 2px rgba(16, 185, 129, 0.4); }
         }
     </style>
 </head>
 <body>
 
-    <div class="dashboard-card">
-        <h1>Battery Voltage</h1>
-        <div class="voltage-display">
-            <span id="voltage-val">0.00</span><span class="unit">V</span>
+    <div class="dashboard-container">
+        <h1>Battery Node Monitor</h1>
+        <div class="voltage-frame">
+            <span id="voltage-val">0.00</span><span class="unit-symbol">V</span>
         </div>
-        <div class="status">
-            <span class="status-dot"></span>Realtime Stream Connected
+        <div class="status-footer">
+            <div class="status-indicator-pulse" id="status-dot"></div>
+            <span id="status-text">Synchronizing Gateway...</span>
         </div>
     </div>
 
     <script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyBxmr6HHUihOqWvT5LYZgwOf0-gSvQSdGk",
-    databaseURL: "https://voltgaemonitor-default-rtdb.asia-southeast1.firebasedatabase.app/", // <-- ADDED THIS CRITICAL LINE
-    authDomain: "voltgaemonitor.firebaseapp.com",
-    projectId: "voltgaemonitor",
-    storageBucket: "voltgaemonitor.firebasestorage.app",
-    messagingSenderId: "1069914426787",
-    appId: "1:1069914426787:web:89587ee09edf1180959e16",
-    measurementId: "G-Y5Q5ZRD4PK"
-  };
+        // Explicit regional configuration declaration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBxmr6HHUihOqWvT5LYZgwOf0-gSvQSdGk",
+            authDomain: "voltgaemonitor.firebaseapp.com",
+            databaseURL: "https://voltgaemonitor-default-rtdb.asia-southeast1.firebasedatabase.app/",
+            projectId: "voltgaemonitor",
+            storageBucket: "voltgaemonitor.firebasestorage.app",
+            messagingSenderId: "1069914426787",
+            appId: "1:1069914426787:web:89587ee09edf1180959e16",
+            measurementId: "G-Y5Q5ZRD4PK"
+        };
 
-  // Initialize Firebase
-  const analytics = getAnalytics(app);
-
-        // Initialize Firebase
+        // Initialize App Ecosystem
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Reference to your ESP32 database path
+        // Targeted pipeline routing node
         const voltageRef = ref(db, 'voltage_system/current_voltage');
+        const displayTarget = document.getElementById('voltage-val');
+        const statusText = document.getElementById('status-text');
+        const statusDot = document.getElementById('status-dot');
 
-        // Listen for realtime data changes
-        const voltageValElement = document.getElementById('voltage-val');
-        
+        // Capture state mutations asynchronously
         onValue(voltageRef, (snapshot) => {
-            const data = snapshot.val();
-            if (data !== null) {
-                // Update the text on screen dynamically
-                voltageValElement.innerText = Number(data).toFixed(2);
+            const runtimePayload = snapshot.val();
+            if (runtimePayload !== null) {
+                const numericVoltage = Number(runtimePayload);
+                displayTarget.innerText = numericVoltage.toFixed(2);
                 
-                // Visual Indicator: Change color to orange if voltage gets low (e.g., under 11V for a 12V battery)
-                if (data < 11.0) {
-                    voltageValElement.style.color = "#ff9100"; 
+                // Update interface context dynamically
+                statusText.innerText = "Live Stream Linked";
+                statusText.style.color = "#94a3b8";
+                statusDot.style.backgroundColor = "#10b981";
+
+                // Under-voltage low battery alarm layout modifier (11.0V baseline threshold)
+                if (numericVoltage < 11.0) {
+                    displayTarget.style.color = "#f97316"; // Danger Orange Alert color
                 } else {
-                    voltageValElement.style.color = "#00e676";
+                    displayTarget.style.color = "#10b981"; // Safe Green telemetry standard
                 }
             }
-        }, (error) => {
-            console.error("Firebase read failed: ", error);
-            voltageValElement.innerText = "ERR";
+        }, (runtimeError) => {
+            console.error("Pipeline failure: ", runtimeError);
+            displayTarget.innerText = "ERR";
+            displayTarget.style.color = "#ef4444";
+            statusText.innerText = "Access Denied / Offline";
+            statusText.style.color = "#ef4444";
+            statusDot.style.backgroundColor = "#ef4444";
         });
     </script>
 </body>
